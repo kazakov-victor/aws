@@ -1,0 +1,91 @@
+server:
+  port: 5000
+  servlet:
+    context-path: /
+# AWS properties
+aws:
+  accessKey: AKIAWXT74TE3Y3GIEUAT
+  accessKeyId: AKIAWXT74TE3Y3GIEUAT
+  secretKey: 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
+  region: eu-central-1
+  userPoolId:   eu-central-1_RvRSCSi1p
+  appClientId: m3b0cddmlkrmjjfa241jtoqg9
+  appClientSecret: 1eb8aq9mumtbfdha9auj6vnrjqgnccs04dab7unmu9gflv4gq7ce
+  bucketName: mynew-aws-test-bucket
+  baseFolder: pictures
+
+####### resource server configuration properties
+spring:
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    defer-datasource-initialization: true
+  datasource:
+    url: jdbc:postgresql://diagram.cqazndkfmqgd.eu-central-1.rds.amazonaws.com:5432/diagram
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+  sql:
+    init:
+      platform: postgres
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            clientId: m3b0cddmlkrmjjfa241jtoqg9
+            clientSecret: 1eb8aq9mumtbfdha9auj6vnrjqgnccs04dab7unmu9gflv4gq7ce
+            scope: openid
+            redirect-uri: http://localhost:5000/login/oauth2/code/cognito
+            clientName: back-end
+        provider:
+          cognito:
+            issuerUri: https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_RvRSCSi1p
+            user-name-attribute: cognito:username
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    defer-datasource-initialization: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/diagram
+    username: postgres
+    password: postgres
+    driverClassName: org.postgresql.Driver
+  sql:
+    init:
+      platform: postgres
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            clientId: m3b0cddmlkrmjjfa241jtoqg9
+            clientSecret: 1eb8aq9mumtbfdha9auj6vnrjqgnccs04dab7unmu9gflv4gq7ce
+            scope: openid
+            redirect-uri: http://localhost:5000/login/oauth2/code/cognito
+            clientName: back-end
+        provider:
+          cognito:
+            issuerUri: https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_RvRSCSi1p
+            user-name-attribute: cognito:username
+
+
