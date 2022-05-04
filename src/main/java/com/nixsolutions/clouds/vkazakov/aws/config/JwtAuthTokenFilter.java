@@ -1,4 +1,4 @@
-package com.nixsolutions.clouds.vkazakov.aws.filter;
+package com.nixsolutions.clouds.vkazakov.aws.config;
 
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;

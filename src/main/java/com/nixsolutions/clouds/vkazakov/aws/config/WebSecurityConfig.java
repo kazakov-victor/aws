@@ -1,6 +1,5 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
-import com.nixsolutions.clouds.vkazakov.aws.filter.JwtAuthTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +23,8 @@ import org.springframework.web.filter.CorsFilter;
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private UserDetailsService userDetailsService;
+    @Autowired
+    private JwtAuthTokenFilter jwtAuthTokenFilter;
 
     private static final String[] AUTH_WHITELIST = {
         "/swagger-resources/**",
@@ -38,11 +39,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public WebSecurityConfig(
         UserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
-    }
-
-    @Bean
-    public JwtAuthTokenFilter authenticationJwtTokenFilter() {
-        return new JwtAuthTokenFilter();
     }
 
     @Bean
@@ -88,10 +84,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .sessionManagement()
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http
-            .addFilterBefore(authenticationJwtTokenFilter(),
+            .addFilterBefore(jwtAuthTokenFilter,
                 UsernamePasswordAuthenticationFilter.class);
     }
-
-
 
 }

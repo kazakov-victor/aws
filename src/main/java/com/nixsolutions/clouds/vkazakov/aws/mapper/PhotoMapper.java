@@ -24,15 +24,12 @@ public class PhotoMapper {
     }
 
     public MultipartFile map(String photoLink) {
-        //get from s3
-
         try {
             return new MockMultipartFile(photoLink, s3.downloadFile(photoLink));
         } catch (IOException e) {
             log.error(e.getMessage());
             return null;
         }
-
     }
 
 }

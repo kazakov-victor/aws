@@ -46,30 +46,6 @@ public class AdminController {
         return userMapper.toDto(userService.findAll());
     }
 
-    /**
-     * Saves user in database
-     * if login or email are not already in use
-     */
-//    @PostMapping("/" )
-//    public ResponseEntity<?> saveUser(@RequestParam UserDto userDto) {
-//        userDto = xssCleaner.cleanFields(userDto);
-//        Map<String, String> errors = UserValidator.validate(userDto);
-//        errors = userChecker.userCheck(userDto, errors);
-//
-//
-//        if (errors.isEmpty()) {
-//            User user = userMapper.toEntity(userDto);
-//            String passNew = bCryptPasswordEncoder.encode(user.getPassword());
-//            user.setPassword(passNew);
-//            userService.save(user);
-//
-//            UserDto userDtoResult = userMapper.toDto(user);
-//            userDtoResult.setPassword("");
-//            return ResponseEntity.status(201).body(userDtoResult);
-//        }
-//        return ResponseEntity.status(422).body(errors);
-//    }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUserById(@PathVariable Long id) {
         if (isIdWrong(id)) {
