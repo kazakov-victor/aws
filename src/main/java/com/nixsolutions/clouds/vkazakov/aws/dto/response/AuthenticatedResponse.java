@@ -1,4 +1,4 @@
-package com.nixsolutions.clouds.vkazakov.aws.response;
+package com.nixsolutions.clouds.vkazakov.aws.dto.response;
 
 import java.io.Serializable;
 import lombok.Builder;

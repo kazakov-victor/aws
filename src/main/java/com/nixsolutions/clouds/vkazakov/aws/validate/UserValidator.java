@@ -21,11 +21,6 @@ public class UserValidator {
         Set<ConstraintViolation<UserDto>> constraintViolations
                 = validator.validate(userDto);
 
-        if (constraintViolations.isEmpty() && !userDto.getPassword()
-                .equals(userDto.getPasswordAgain())) {
-            errors.put("password", "Password again must be equals to password ");
-        }
-
         checkAge(userDto, errors);
 
         if (!constraintViolations.isEmpty()) {

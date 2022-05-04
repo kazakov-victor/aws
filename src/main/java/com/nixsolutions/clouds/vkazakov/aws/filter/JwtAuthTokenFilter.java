@@ -1,33 +1,35 @@
-package com.nixsolutions.clouds.vkazakov.aws.jwtauthentication;
+package com.nixsolutions.clouds.vkazakov.aws.filter;
 
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
-import com.nixsolutions.clouds.vkazakov.aws.config.AwsConfig;
+import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
 import java.io.IOException;
 import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.apache.log4j.Logger;
+import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import static java.util.List.of;
 
+@Log4j
+@Component
 public class JwtAuthTokenFilter extends OncePerRequestFilter {
-    private static final Logger logger = Logger.getLogger(JwtAuthTokenFilter.class);
     private static final String TOKEN_TYPE = "Bearer ";
 
     @Autowired
-    private AwsConfig awsConfig;
+    private AwsConstants awsConstants;
 
     @Autowired
     private ConfigurableJWTProcessor<SecurityContext> configurableJWTProcessor;
@@ -43,7 +45,6 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
             if (username != null) {
                 List<GrantedAuthority> grantedAuthorities =
                     of(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                User user = new User(username, "", of());
                 return new UsernamePasswordAuthenticationToken(username, claims,
                     grantedAuthorities);
             }
@@ -56,9 +57,9 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
     }
 
     private void validateIssuer(JWTClaimsSet claims) throws Exception {
-        if (!claims.getIssuer().equals(awsConfig.getUserPoolIdURL())) {
+        if (!claims.getIssuer().equals(awsConstants.getUserPoolIdURL())) {
             throw new Exception(String.format("Issuer %s does not match cognito idp %s", claims.getIssuer(),
-                awsConfig.getUserPoolIdURL()));
+                awsConstants.getUserPoolIdURL()));
         }
     }
 
@@ -79,7 +80,7 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            logger.error("Can NOT set user authentication -> Message: {" + e.getMessage() +"}", e);
+            log.error("Can NOT set user authentication -> Message: {" + e.getMessage() +"}", e);
         }
         filterChain.doFilter(request, response);
     }

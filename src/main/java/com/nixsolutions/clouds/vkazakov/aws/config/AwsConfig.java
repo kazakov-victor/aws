@@ -1,41 +1,48 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
+import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-/**
- * Properties specific to aws client.
- * <p>
- * Properties are configured in the {@code application.yml} file.
- */
-@Data
-@Component
-@ConfigurationProperties(prefix = "aws", ignoreUnknownFields = false)
+@Configuration
+@RequiredArgsConstructor
 public class AwsConfig {
-    private String userPoolId;
-    private String identityPoolId;
-    private String jwkUrl;
-    private String region;
-    private String accessKey;
-    private String accessKeyId;
-    private String secretKey;
-    private String appClientId;
-    private String appClientSecret;
-    private String bucketName;
-    private String baseFolder;
-    private int connectionTimeout = 2000;
-    private int readTimeout = 2000;
+    private final AwsConstants awsConstants;
 
-    public String getJwkUrl() {
-        return this.jwkUrl != null && !this.jwkUrl.isEmpty() ? this.jwkUrl : String
-            .format("https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json", this.region,
-                this.userPoolId);
+    @Bean
+    public AmazonS3 createS3() {
+        return AmazonS3ClientBuilder.standard()
+            .withCredentials(new AWSStaticCredentialsProvider
+                (new BasicAWSCredentials(
+                    awsConstants.getAccessKeyId(),
+                    awsConstants.getSecretKey())))
+            .withRegion(Regions.EU_CENTRAL_1).build();
     }
 
-    public String getUserPoolIdURL() {
-        return String
-            .format("https://cognito-idp.%s.amazonaws.com/%s", this.region, this.userPoolId);
+    @Bean
+    public AmazonS3 createS3Inner() {
+        return AmazonS3ClientBuilder.standard()
+            .withRegion(Regions.EU_CENTRAL_1).build();
     }
 
+    @Bean
+    public AWSCognitoIdentityProvider createCognitoClient() {
+        AWSCredentials cred =
+            new BasicAWSCredentials(awsConstants.getAccessKeyId(), awsConstants.getSecretKey());
+        AWSCredentialsProvider credProvider = new AWSStaticCredentialsProvider(cred);
+        return AWSCognitoIdentityProviderClientBuilder.standard()
+            .withCredentials(credProvider)
+            .withRegion(awsConstants.getRegion())
+            .build();
+    }
 }

@@ -7,19 +7,16 @@ import com.nixsolutions.clouds.vkazakov.aws.service.RoleService;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
+@RequiredArgsConstructor
 @RestController
-public class RoleRestController {
+public class RoleController {
     private final RoleService roleService;
     private final RoleMapper roleMapper;
-
-    public RoleRestController(RoleService roleService, RoleMapper roleMapper) {
-        this.roleService = roleService;
-        this.roleMapper = roleMapper;
-    }
 
     /**
      * Returns list of all roles

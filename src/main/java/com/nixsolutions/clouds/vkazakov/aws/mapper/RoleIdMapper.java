@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RoleIdMapper {
-    private RoleService roleService;
+    private final RoleService roleService;
 
     public RoleIdMapper(RoleService roleService) {
         this.roleService = roleService;

@@ -1,22 +1,26 @@
 package com.nixsolutions.clouds.vkazakov.aws.service;
 
+import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
 import com.nixsolutions.clouds.vkazakov.aws.entity.User;
+import com.nixsolutions.clouds.vkazakov.aws.mapper.UserMapper;
 import com.nixsolutions.clouds.vkazakov.aws.repository.UserRepository;
+import com.nixsolutions.clouds.vkazakov.aws.validate.UserValidator;
+import com.nixsolutions.clouds.vkazakov.aws.validate.XSSCleaner;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class UserServiceImp implements UserService {
-    @Autowired
-    UserRepository repository;
-
-    public UserServiceImp(UserRepository repository) {
-        this.repository = repository;
-    }
+    private final UserRepository repository;
+    private final UserMapper userMapper;
+    private final XSSCleaner xssCleaner;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
     public User findById(Long id) {
@@ -35,12 +39,28 @@ public class UserServiceImp implements UserService {
 
     @Override
     public List<User> findAll() {
-        return repository.findAll();
+        List<User> users = repository.findAll();
+        for (User user : users) {
+            user.setPassword("");
+        }
+        return users;
     }
 
     @Override
-    public User save(User User) {
-        return repository.save(User);
+    public void save(User User) {
+        repository.save(User);
+    }
+
+    public void saveUserDto(UserDto userDto) {
+        userDto = xssCleaner.cleanFields(userDto);
+        Map<String, String> errors = UserValidator.validate(userDto);
+
+        if (errors.isEmpty()) {
+            User user = userMapper.toEntity(userDto);
+            String passNew = bCryptPasswordEncoder.encode(user.getPassword());
+            user.setPassword(passNew);
+            save(user);
+        }
     }
 
     @Override

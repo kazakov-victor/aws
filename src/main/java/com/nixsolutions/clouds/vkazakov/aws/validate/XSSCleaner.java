@@ -14,7 +14,6 @@ public class XSSCleaner {
            cleanValue(userDto.getUsername()),
            cleanValue(userDto.getEmail()),
            cleanValue(userDto.getPassword()),
-           cleanValue(userDto.getPasswordAgain()),
            cleanValue(userDto.getBirthdate()),
            cleanValue(userDto.getRoleId()),
            cleanValue(userDto.getPhoneNumber()),

@@ -1,15 +1,15 @@
 package com.nixsolutions.clouds.vkazakov.aws.service;
 
 import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthResult;
-import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeResult;
-import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordResult;
 import com.amazonaws.services.cognitoidp.model.ForgotPasswordResult;
-import com.amazonaws.services.cognitoidp.model.GlobalSignOutResult;
 import com.amazonaws.services.cognitoidp.model.UserType;
-import com.nixsolutions.clouds.vkazakov.aws.dto.UserSignUpDTO;
+import com.nixsolutions.clouds.vkazakov.aws.dto.LoginDTO;
+import com.nixsolutions.clouds.vkazakov.aws.dto.PasswordUpdateDTO;
+import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
+import com.nixsolutions.clouds.vkazakov.aws.dto.response.AuthenticatedResponse;
+import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
 import java.util.Optional;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface CognitoUserService {
     /**
@@ -34,9 +34,8 @@ public interface CognitoUserService {
      * Signs out users from all devices.
      *
      * @param accessToken access token
-     * @return GlobalSignOutResult
      */
-    GlobalSignOutResult signOut(String accessToken);
+    void signOut(String accessToken);
 
     /**
      * Send forgot password flow
@@ -59,23 +58,25 @@ public interface CognitoUserService {
      *
      * @param username username
      * @param password user password
-     * @return AdminSetUserPasswordResult
      */
-    AdminSetUserPasswordResult setUserPassword(String username, String password);
+    void setUserPassword(String username, String password);
 
     /**
      * Creates a new user in the specified user pool.
      *
-     * @param signUpDTO user info
      * @return UserType
      */
-    UserType signUp(UserSignUpDTO signUpDTO);
+    UserType signUp(UserDto userDto);
 
     /**
-     * @param username  username username
-     * @param maxResult The maximum number of authentication events to return.
-     * @param nextToken A pagination token.
-     * @return AdminListUserAuthEventsResult
+     * @param userLogin user username infos
+     * @return BaseResponse
      */
-    AdminListUserAuthEventsResult getUserAuthEvents(String username, int maxResult, String nextToken);
+    BaseResponse authenticate(LoginDTO userLogin);
+
+    /**
+     * @param passwordUpdateDTO user password DTO request
+     * @return AuthenticatedResponse
+     */
+    AuthenticatedResponse updateUserPassword(PasswordUpdateDTO passwordUpdateDTO);
 }

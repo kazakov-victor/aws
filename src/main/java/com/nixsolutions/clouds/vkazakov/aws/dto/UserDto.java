@@ -37,10 +37,6 @@ public class UserDto {
     @NotEmpty(message = "Please insert password!")
     private String password;
 
-    @NotNull(message = "Please insert password again!")
-    @NotNull(message = "Please insert password again!")
-    private String passwordAgain;
-
     @NotNull(message = "Please insert date in format 2000-01-01!")
     @Pattern(regexp = Constants.DATE_REGEX,
             message = "Please insert date in format 2000-01-01!")
@@ -53,7 +49,6 @@ public class UserDto {
     private String phoneNumber;
 
     private MultipartFile photo;
-
 
 }
 

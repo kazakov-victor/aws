@@ -1,6 +1,5 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +24,7 @@ public class SwaggerConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfo("Users REST API",
-            "Back-end API.",
+            "Back-end REST API.",
             "1.0",
             "Terms of service",
             new Contact("Victor Kazakov", "www.nixsolutions.com",
@@ -43,8 +42,8 @@ public class SwaggerConfig {
             .apis(RequestHandlerSelectors.basePackage("com.nixsolutions.clouds.vkazakov.aws"))
             .paths(PathSelectors.any())
             .build()
-            .securityContexts(Arrays.asList(securityContext()))
-            .securitySchemes(Arrays.asList(apiKey()));
+            .securityContexts(Collections.singletonList(securityContext()))
+            .securitySchemes(Collections.singletonList(apiKey()));
     }
 
     private ApiKey apiKey() {
@@ -57,12 +56,13 @@ public class SwaggerConfig {
             .build();
     }
 
-    List<SecurityReference> defaultAuth() {
+    private List<SecurityReference> defaultAuth() {
         AuthorizationScope authorizationScope
             = new AuthorizationScope("global", "accessEverything");
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
         authorizationScopes[0] = authorizationScope;
-        return Arrays.asList(new SecurityReference(AUTHORIZATION_HEADER, authorizationScopes));
+        return Collections
+            .singletonList(new SecurityReference(AUTHORIZATION_HEADER, authorizationScopes));
     }
 
 }

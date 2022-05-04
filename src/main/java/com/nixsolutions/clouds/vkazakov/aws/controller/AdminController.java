@@ -1,12 +1,9 @@
 package com.nixsolutions.clouds.vkazakov.aws.controller;
 
-import com.nixsolutions.clouds.vkazakov.aws.config.AwsConfig;
 import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
-import com.nixsolutions.clouds.vkazakov.aws.dto.UserForListDto;
 import com.nixsolutions.clouds.vkazakov.aws.entity.User;
-import com.nixsolutions.clouds.vkazakov.aws.mapper.UserForListMapper;
 import com.nixsolutions.clouds.vkazakov.aws.mapper.UserMapper;
-import com.nixsolutions.clouds.vkazakov.aws.service.S3BucketManager;
+import com.nixsolutions.clouds.vkazakov.aws.service.S3BucketService;
 import com.nixsolutions.clouds.vkazakov.aws.service.UserService;
 import com.nixsolutions.clouds.vkazakov.aws.validate.UserValidator;
 import com.nixsolutions.clouds.vkazakov.aws.validate.XSSCleaner;
@@ -16,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,34 +21,15 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/admin/rest")
-public class AdminRestController {
-    @Autowired
-    private AwsConfig awsConfig;
-
-    private final UserForListMapper userForListMapper;
+public class AdminController {
     private final UserMapper userMapper;
     private final UserService userService;
     private final XSSCleaner xssCleaner;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final S3BucketManager s3BucketManager;
-
-
-    public AdminRestController(UserService userService,
-                               UserForListMapper userForListMapper,
-                               UserMapper userMapper,
-                               XSSCleaner xssCleaner,
-                               BCryptPasswordEncoder bCryptPasswordEncoder,
-                               S3BucketManager s3BucketManager
-    ) {
-        this.userService = userService;
-        this.userForListMapper = userForListMapper;
-        this.userMapper = userMapper;
-        this.xssCleaner = xssCleaner;
-        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.s3BucketManager = s3BucketManager;
-    }
+    private final S3BucketService s3BucketService;
 
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
@@ -60,47 +38,40 @@ public class AdminRestController {
     }
 
     /**
-     * Returns list of all users
+     * Returns list of all users.
      */
     @GetMapping("/")
     public @ResponseBody
-    List<UserForListDto> listUsers() {
-        List<User> users = userService.findAll();
-        for (User user : users) {
-            user.setPassword("");
-        }
-        return userForListMapper.toDto(users);
+    List<UserDto> listUsers() {
+        return userMapper.toDto(userService.findAll());
     }
 
     /**
      * Saves user in database
      * if login or email are not already in use
      */
-    @PostMapping("/" )
-    public ResponseEntity<?> saveUser(@RequestParam UserDto userDto) {
-        userDto = xssCleaner.cleanFields(userDto);
-        Map<String, String> errors = UserValidator.validate(userDto);
-        if (userService.findUserByUsername(userDto.getUsername()) != null) {
-            errors.put("username", "This username is already in use!");
-        }
-        if (userService.findUserByEmail(userDto.getEmail()) != null) {
-            errors.put("email", "This email is already in use!");
-        }
-        if (errors.isEmpty()) {
-            User user = userMapper.toEntity(userDto);
-            String passNew = bCryptPasswordEncoder.encode(user.getPassword());
-            user.setPassword(passNew);
-            userService.save(user);
-            UserDto userDtoResult = userMapper.toDto(user);
-            userDtoResult.setPassword("");
-            userDtoResult.setPasswordAgain("");
-            return ResponseEntity.status(201).body(userDtoResult);
-        }
-        return ResponseEntity.status(422).body(errors);
-    }
+//    @PostMapping("/" )
+//    public ResponseEntity<?> saveUser(@RequestParam UserDto userDto) {
+//        userDto = xssCleaner.cleanFields(userDto);
+//        Map<String, String> errors = UserValidator.validate(userDto);
+//        errors = userChecker.userCheck(userDto, errors);
+//
+//
+//        if (errors.isEmpty()) {
+//            User user = userMapper.toEntity(userDto);
+//            String passNew = bCryptPasswordEncoder.encode(user.getPassword());
+//            user.setPassword(passNew);
+//            userService.save(user);
+//
+//            UserDto userDtoResult = userMapper.toDto(user);
+//            userDtoResult.setPassword("");
+//            return ResponseEntity.status(201).body(userDtoResult);
+//        }
+//        return ResponseEntity.status(422).body(errors);
+//    }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<String> deleteUserById(@PathVariable Long id) {
         if (isIdWrong(id)) {
             return ResponseEntity.notFound().build();
         }
@@ -124,7 +95,6 @@ public class AdminRestController {
         if (user != null) {
             UserDto userDto = userMapper.toDto(user);
             userDto.setPassword("");
-            userDto.setPasswordAgain("");
             return ResponseEntity.ok(userDto);
         }
         return ResponseEntity.notFound().build();
@@ -144,7 +114,6 @@ public class AdminRestController {
         if (user != null) {
             UserDto userDto = userMapper.toDto(user);
             userDto.setPassword("");
-            userDto.setPasswordAgain("");
             return ResponseEntity.ok(userDto);
         }
         return ResponseEntity.notFound().build();
@@ -167,9 +136,8 @@ public class AdminRestController {
         } else {
             userDto = xssCleaner.cleanFields(userDto);
             errors = UserValidator.validate(userDto);
-            if(userDto.getPassword().equals("") && userDto.getPasswordAgain().equals("")){
+            if(userDto.getPassword().equals("")){
                errors.remove("password","Please insert password!");
-               errors.remove("passwordAgain","Please insert password again!");
             }
             String usernameNotEdit = userService.findById(id).getUsername();
 
@@ -188,7 +156,7 @@ public class AdminRestController {
                     userNew.setPassword(userOld.getPassword());
                 }
                 //delete old photo
-                s3BucketManager.deleteFile(awsConfig.getBucketName(), userOld.getPhotoLink());
+                s3BucketService.deleteFile(userOld.getPhotoLink());
                 userService.save(userNew);
                 errors.put("entity", "Entity was update!");
                 return ResponseEntity.status(201).body(errors);

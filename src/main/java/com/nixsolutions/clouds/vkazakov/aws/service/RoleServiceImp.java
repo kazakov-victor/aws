@@ -1,26 +1,21 @@
 package com.nixsolutions.clouds.vkazakov.aws.service;
 
-
 import com.nixsolutions.clouds.vkazakov.aws.entity.Role;
 import com.nixsolutions.clouds.vkazakov.aws.repository.RoleRepository;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class RoleServiceImp implements RoleService {
-   @Autowired
-   RoleRepository repository;
-
-   public RoleServiceImp(RoleRepository repository) {
-      this.repository = repository;
-   }
+   private final RoleRepository repository;
 
    @Override
-   public Role save(Role Role) {
-      return repository.save(Role);
+   public void save(Role Role) {
+      repository.save(Role);
    }
 
    @Override
@@ -37,11 +32,5 @@ public class RoleServiceImp implements RoleService {
    public List<Role> getAllRoles() {
       return repository.findAll();
    }
-
-   @Override
-   public void deleteById(Long id) {
-      repository.deleteById(id);
-   }
-
 
 }

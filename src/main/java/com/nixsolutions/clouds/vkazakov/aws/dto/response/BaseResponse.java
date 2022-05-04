@@ -1,4 +1,4 @@
-package com.nixsolutions.clouds.vkazakov.aws.response;
+package com.nixsolutions.clouds.vkazakov.aws.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,13 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * <h2>BaseResponse</h2>
- *
- * @author aek
- * <p>
- * Description:
- */
 @Getter
 @Setter
 @NoArgsConstructor

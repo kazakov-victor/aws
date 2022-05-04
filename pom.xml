@@ -164,8 +164,13 @@
 			<artifactId>aws-java-sdk-iam</artifactId>
 			<version>1.12.197</version>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>5.3.19</version>
+        </dependency>
 
-	</dependencies>
+    </dependencies>
 	<build>
 		<finalName>ROOT</finalName>
 		<plugins>

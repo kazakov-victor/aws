@@ -15,22 +15,22 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class UserPrinciple implements UserDetails {
     private static final long serialVersionUID = 1L;
 
-    private Long id;
+    private final Long id;
 
-    private String firstName;
+    private final String firstName;
 
-    private String lastName;
+    private final String lastName;
 
-    private String username;
+    private final String username;
 
-    private String email;
+    private final String email;
 
     @JsonIgnore
-    private String password;
-    private Date birthdate;
-    private Role role;
+    private final String password;
+    private final Date birthdate;
+    private final Role role;
 
-    private Collection<? extends GrantedAuthority> authorities;
+    private final Collection<? extends GrantedAuthority> authorities;
 
     public UserPrinciple(Long id, String firstName, String lastName,
                          String username, String email, String password,

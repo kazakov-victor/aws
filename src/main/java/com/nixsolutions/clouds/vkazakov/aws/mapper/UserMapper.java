@@ -13,6 +13,6 @@ public interface UserMapper extends EntityMapper<UserDto, User>{
      @Mapping(target = "roleId", source = "role")
      @Mapping(target = "photo", source = "photoLink")
      UserDto toDto(User user);
-@InheritInverseConfiguration
+     @InheritInverseConfiguration
      User toEntity(UserDto userDto);
 }
