@@ -1,24 +1,23 @@
 package com.nixsolutions.clouds.vkazakov.aws.controller;
 
 import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
-import com.nixsolutions.clouds.vkazakov.aws.entity.User;
 import com.nixsolutions.clouds.vkazakov.aws.mapper.UserMapper;
-import com.nixsolutions.clouds.vkazakov.aws.service.S3BucketService;
 import com.nixsolutions.clouds.vkazakov.aws.service.UserService;
-import com.nixsolutions.clouds.vkazakov.aws.validate.UserValidator;
-import com.nixsolutions.clouds.vkazakov.aws.validate.XSSCleaner;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @CrossOrigin
 @RequiredArgsConstructor
@@ -27,9 +26,6 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
     private final UserMapper userMapper;
     private final UserService userService;
-    private final XSSCleaner xssCleaner;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final S3BucketService s3BucketService;
 
     @InitBinder
     public void initBinder(WebDataBinder dataBinder) {
@@ -37,9 +33,6 @@ public class AdminController {
         dataBinder.registerCustomEditor(String.class, stringTrimmerEditor);
     }
 
-    /**
-     * Returns list of all users.
-     */
     @GetMapping("/")
     public @ResponseBody
     List<UserDto> listUsers() {
@@ -47,111 +40,26 @@ public class AdminController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteUserById(@PathVariable Long id) {
-        if (isIdWrong(id)) {
-            return ResponseEntity.notFound().build();
-        }
-        User user = userService.findById(id);
-        if (user != null) {
-            userService.deleteById(id);
-            return ResponseEntity.ok("User was delete!");
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<String> deleteUserById(@PathVariable("id") Long id) {
+        return userService.getDeleteResponse(id);
     }
 
-    /**
-     * Finds user by id
-     */
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> findUserById(@PathVariable Long id) {
-        if (isIdWrong(id)) {
-            return ResponseEntity.status(422).build();
-        }
-        User user = userService.findById(id);
-        if (user != null) {
-            UserDto userDto = userMapper.toDto(user);
-            userDto.setPassword("");
-            return ResponseEntity.ok(userDto);
-        }
-        return ResponseEntity.notFound().build();
+        return userService.getUserByIdResponse(id);
     }
 
     @GetMapping("/find/{username}")
-    public ResponseEntity<UserDto> findUserByLogin(@PathVariable Optional<String> username) {
-        String usernameFromPath;
-        if (username.isPresent()) {
-            usernameFromPath = username.get();
-        } else {
-            return ResponseEntity.status(422).build();
-        }
-
-        String usernameClean = xssCleaner.cleanValue(usernameFromPath);
-        User user = userService.findUserByUsername(usernameClean);
-        if (user != null) {
-            UserDto userDto = userMapper.toDto(user);
-            userDto.setPassword("");
-            return ResponseEntity.ok(userDto);
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<UserDto> findUserByLogin(@PathVariable String username) {
+        return userService.getFindUserResponse(username);
     }
 
-    /**
-     * Edits exist user
-     */
     @PostMapping("/edit/{id}")
-    public ResponseEntity<Map<String, String>> editUser(@ModelAttribute UserDto userDto,
-                                @PathVariable Long id) {
-        Map<String, String> errors = new HashMap<>();
-        if (isIdWrong(id)) {
-            errors.put("common", "Wrong id!");
-            return ResponseEntity.status(422).body(errors);
-        }
-
-        if (userDto == null) {
-            errors.put("entity", "There is no entity!");
-        } else {
-            userDto = xssCleaner.cleanFields(userDto);
-            errors = UserValidator.validate(userDto);
-            if(userDto.getPassword().equals("")){
-               errors.remove("password","Please insert password!");
-            }
-            String usernameNotEdit = userService.findById(id).getUsername();
-
-            User userEmailCheck = userService.findUserByEmail(userDto.getEmail());
-            if (userEmailCheck != null && !(userEmailCheck.getId().equals(id))) {
-                errors.put("email", "This email is already in use!");
-            }
-            if (errors.isEmpty()) {
-                User userOld = userService.findById(id);
-                User userNew = userMapper.toEntity(userDto);
-                userNew.setId(id);
-                userNew.setUsername(usernameNotEdit);
-                if(!userNew.getPassword().equals("")) {
-                   userNew.setPassword(bCryptPasswordEncoder.encode(userNew.getPassword()));
-                } else {
-                    userNew.setPassword(userOld.getPassword());
-                }
-                //delete old photo
-                s3BucketService.deleteFile(userOld.getPhotoLink());
-                userService.save(userNew);
-                errors.put("entity", "Entity was update!");
-                return ResponseEntity.status(201).body(errors);
-            }
-        }
-        return ResponseEntity.status(422).body(errors);
+    public ResponseEntity<String> editUser(@ModelAttribute UserDto userDto,
+                                                        @PathVariable Long id) {
+        return userService.getEditResponse(userDto, id);
     }
 
-    /**
-     * Checks is id correct
-     * If it is wrong return true or false in another case
-     */
-    private boolean isIdWrong(Long id) {
-        String ID_REGEX = "^[0-9]+$";
-        Pattern pattern = Pattern.compile(ID_REGEX);
-        Matcher matcher = pattern.matcher(String.valueOf(id));
-        User user = userService.findById(id);
-        return id == null || !matcher.find() || user == null;
-    }
 }
 
 

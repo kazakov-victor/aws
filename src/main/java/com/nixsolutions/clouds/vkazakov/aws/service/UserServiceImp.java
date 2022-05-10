@@ -7,8 +7,8 @@ import com.nixsolutions.clouds.vkazakov.aws.repository.UserRepository;
 import com.nixsolutions.clouds.vkazakov.aws.validate.UserValidator;
 import com.nixsolutions.clouds.vkazakov.aws.validate.XSSCleaner;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +21,7 @@ public class UserServiceImp implements UserService {
     private final UserMapper userMapper;
     private final XSSCleaner xssCleaner;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final S3BucketService s3BucketService;
 
     @Override
     public User findById(Long id) {
@@ -33,34 +34,18 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
-    public User findUserByEmail(String email) {
-        return repository.findUserByEmail(email);
-    }
-
-    @Override
     public List<User> findAll() {
-        List<User> users = repository.findAll();
-        for (User user : users) {
-            user.setPassword("");
-        }
-        return users;
+        return repository.findAll();
     }
 
-    @Override
-    public void save(User User) {
+    private void save(User User) {
         repository.save(User);
     }
 
     public void saveUserDto(UserDto userDto) {
-        userDto = xssCleaner.cleanFields(userDto);
-        Map<String, String> errors = UserValidator.validate(userDto);
-
-        if (errors.isEmpty()) {
-            User user = userMapper.toEntity(userDto);
-            String passNew = bCryptPasswordEncoder.encode(user.getPassword());
-            user.setPassword(passNew);
-            save(user);
-        }
+        userDto = checkUserDto(userDto);
+        User user = userMapper.toEntity(userDto);
+        save(user);
     }
 
     @Override
@@ -68,5 +53,61 @@ public class UserServiceImp implements UserService {
         repository.deleteById(id);
     }
 
+    public ResponseEntity<String> getEditResponse(UserDto userDto, Long oldUserId) {
+        userDto = checkUserDto(userDto);
+        User userOld = findById(oldUserId);
+        User userNew = setUpNewUserFields(userDto, oldUserId, userOld);
+        s3BucketService.deleteFile(userOld.getPhotoLink());
+        save(userNew);
+        return ResponseEntity.status(201).body("Entity was update!");
+    }
+
+    public ResponseEntity<UserDto> getFindUserResponse(String username) {
+        String usernameClean = xssCleaner.cleanValue(username);
+        User user = findUserByUsername(usernameClean);
+        if (user != null) {
+            return ResponseEntity.ok(userMapper.toDto(user));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    public ResponseEntity<String> getDeleteResponse(Long id) {
+        if (findById(id) != null) {
+            deleteById(id);
+            return ResponseEntity.ok("User was delete!");
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    public ResponseEntity<UserDto> getUserByIdResponse(Long id) {
+        User user = findById(id);
+        if (user != null) {
+            UserDto userDto = userMapper.toDto(user);
+            return ResponseEntity.ok(userDto);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    private UserDto checkUserDto(UserDto userDto) {
+        userDto = xssCleaner.cleanFields(userDto);
+        UserValidator.validate(userDto);
+        return userDto;
+    }
+
+    private User setUpNewUserFields(UserDto userDto, Long oldUserId, User userOld) {
+        User userNew = userMapper.toEntity(userDto);
+        userNew.setId(oldUserId);
+        userNew.setUsername(userOld.getUsername());
+        setUserNewPassword(userOld, userNew);
+        return userNew;
+    }
+
+    private void setUserNewPassword(User userOld, User userNew) {
+        if (!userNew.getPassword().equals("")) {
+            userNew.setPassword(bCryptPasswordEncoder.encode(userNew.getPassword()));
+        } else {
+            userNew.setPassword(userOld.getPassword());
+        }
+    }
 }
 

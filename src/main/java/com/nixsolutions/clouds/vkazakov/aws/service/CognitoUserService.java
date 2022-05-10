@@ -1,6 +1,5 @@
 package com.nixsolutions.clouds.vkazakov.aws.service;
 
-import com.amazonaws.services.cognitoidp.model.AdminInitiateAuthResult;
 import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeResult;
 import com.amazonaws.services.cognitoidp.model.ForgotPasswordResult;
 import com.amazonaws.services.cognitoidp.model.UserType;
@@ -9,26 +8,16 @@ import com.nixsolutions.clouds.vkazakov.aws.dto.PasswordUpdateDTO;
 import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
 import com.nixsolutions.clouds.vkazakov.aws.dto.response.AuthenticatedResponse;
 import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
-import java.util.Optional;
 
 public interface CognitoUserService {
-    /**
-     * Authenticate Cognito User
-     *
-     * @param username user name
-     * @param password user password
-     * @return Optional<AdminInitiateAuthResult>
-     */
-    Optional<AdminInitiateAuthResult> initiateAuth(String username, String password);
-
     /**
      * @param username    username
      * @param newPassword new user password
      * @param session     user session di
-     * @return Optional AdminRespondToAuthChallengeResult
+     * @return AdminRespondToAuthChallengeResult
      */
-    Optional<AdminRespondToAuthChallengeResult> respondToAuthChallenge(
-            String username, String newPassword, String session);
+    AdminRespondToAuthChallengeResult respondToAuthChallenge(
+        String username, String newPassword, String session);
 
     /**
      * Signs out users from all devices.

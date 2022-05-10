@@ -8,11 +8,16 @@ import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
 
 @Component
-@Mapper(componentModel = "spring", uses = {DateMapper.class, RoleIdMapper.class, PhotoMapper.class})
+@Mapper(componentModel = "spring", uses = {DateMapper.class, RoleIdMapper.class,
+    PhotoMapper.class, PasswordMapper.class})
+
 public interface UserMapper extends EntityMapper<UserDto, User>{
      @Mapping(target = "roleId", source = "role")
      @Mapping(target = "photo", source = "photoLink")
+     @Mapping(target = "password")
      UserDto toDto(User user);
+
+     @Mapping(target = "password", qualifiedByName = {"PasswordChange", "PasswordEncode"})
      @InheritInverseConfiguration
      User toEntity(UserDto userDto);
 }

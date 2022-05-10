@@ -6,8 +6,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
-import com.nixsolutions.clouds.vkazakov.aws.config.AwsConfig;
-import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
+import com.nixsolutions.clouds.vkazakov.aws.util.S3Constants;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,15 +20,14 @@ import org.springframework.web.multipart.MultipartFile;
 @Component
 @RequiredArgsConstructor
 public class S3BucketService {
-    private final AwsConstants awsConstants;
-    private final AwsConfig config;
+    private final S3Constants s3Constants;
+    private final AmazonS3 amazonS3;
 
     public void uploadFile(MultipartFile content) {
         try {
             Path path = Paths.get(Objects.requireNonNull(content.getOriginalFilename()));
             content.transferTo(path);
-            AmazonS3 s3 = config.createS3();
-            s3.putObject(awsConstants.getBucketName(), content.getOriginalFilename(), path.toFile());
+            amazonS3.putObject(s3Constants.getBucketName(), content.getOriginalFilename(), path.toFile());
         } catch (AmazonServiceException | IOException exception) {
             log.error(exception.getMessage());
         }
@@ -37,16 +35,14 @@ public class S3BucketService {
 
     public void deleteFile(String fileName) {
         try {
-            AmazonS3 s3 = config.createS3Inner();
-            s3.deleteObject(new DeleteObjectRequest(awsConstants.getBucketName(), fileName));
+            amazonS3.deleteObject(new DeleteObjectRequest(s3Constants.getBucketName(), fileName));
         } catch (SdkClientException exception) {
             log.error(exception.getMessage());
         }
     }
 
     public S3ObjectInputStream downloadFile(final String fileName) {
-        AmazonS3 s3 = config.createS3();
-        S3Object object = s3.getObject(awsConstants.getBucketName(), fileName);
+        S3Object object = amazonS3.getObject(s3Constants.getBucketName(), fileName);
         return object.getObjectContent();
     }
 }

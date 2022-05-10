@@ -10,8 +10,9 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,20 +26,17 @@ import static java.util.List.of;
 
 @Log4j
 @Component
+@RequiredArgsConstructor
 public class JwtAuthTokenFilter extends OncePerRequestFilter {
     private static final String TOKEN_TYPE = "Bearer ";
-
-    @Autowired
-    private AwsConstants awsConstants;
-
-    @Autowired
-    private ConfigurableJWTProcessor<SecurityContext> configurableJWTProcessor;
+    private final AwsConstants awsConstants;
+    private final ConfigurableJWTProcessor<SecurityContext> configurableJWTProcessor;
 
     public Authentication authenticate(HttpServletRequest request) throws Exception {
         String idToken = request.getHeader("Authorization");
         if (idToken != null) {
             JWTClaimsSet claims =
-                this.configurableJWTProcessor.process(this.getBearerToken(idToken), null);
+                configurableJWTProcessor.process(getBearerToken(idToken), null);
             validateIssuer(claims);
             verifyIfAccessToken(claims);
             String username = claims.getClaims().get("username").toString();
@@ -58,8 +56,8 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
 
     private void validateIssuer(JWTClaimsSet claims) throws Exception {
         if (!claims.getIssuer().equals(awsConstants.getUserPoolIdURL())) {
-            throw new Exception(String.format("Issuer %s does not match cognito idp %s", claims.getIssuer(),
-                awsConstants.getUserPoolIdURL()));
+            throw new Exception(String.format("Issuer %s does not match cognito idp %s",
+                claims.getIssuer(), awsConstants.getUserPoolIdURL()));
         }
     }
 
@@ -70,9 +68,9 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
         throws ServletException, IOException {
         try {
             Authentication authentication = this.authenticate(request);

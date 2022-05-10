@@ -22,15 +22,14 @@ import com.nixsolutions.clouds.vkazakov.aws.dto.AuthenticatedChallengeDTO;
 import com.nixsolutions.clouds.vkazakov.aws.dto.LoginDTO;
 import com.nixsolutions.clouds.vkazakov.aws.dto.PasswordUpdateDTO;
 import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
+import com.nixsolutions.clouds.vkazakov.aws.dto.response.AuthenticatedResponse;
+import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
 import com.nixsolutions.clouds.vkazakov.aws.exception.FailedAuthenticationException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.InvalidPasswordException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.ServiceException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.UserNotFoundException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.UsernameExistsException;
-import com.nixsolutions.clouds.vkazakov.aws.dto.response.AuthenticatedResponse;
-import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
 import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
-import com.nixsolutions.clouds.vkazakov.aws.util.CognitoAttributesEnum;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -53,6 +52,10 @@ import static com.amazonaws.services.cognitoidp.model.ChallengeNameType.NEW_PASS
 @Service
 @RequiredArgsConstructor
 public class CognitoUserServiceImpl implements CognitoUserService {
+    private final static String USER_NAME = "USERNAME";
+    private final static String PASSWORD = "PASSWORD";
+    private final static String SECRET_HASH = "SECRET_HASH";
+    private final static String NEW_PASSWORD = "NEW_PASSWORD";
     private final AWSCognitoIdentityProvider awsCognitoIdentityProvider;
     private final AwsConstants awsConstants;
     private final UserService userService;
@@ -66,8 +69,6 @@ public class CognitoUserServiceImpl implements CognitoUserService {
             AdminCreateUserResult createUserResult =
                 awsCognitoIdentityProvider.adminCreateUser(signUpRequest);
             s3BucketService.uploadFile(userDto.getPhoto());
-
-//            signUpDTO.getRoles().forEach(r -> addUserToGroup(signUpDTO.getEmail(), r));
             addUserToGroup(userDto.getUsername(), "ROLE_USER");
             setUserPassword(userDto.getUsername(), userDto.getPassword());
             log.info("Created User id: {}" + createUserResult.getUser().getUsername());
@@ -86,7 +87,6 @@ public class CognitoUserServiceImpl implements CognitoUserService {
         return new AdminCreateUserRequest()
             .withUserPoolId(awsConstants.getUserPoolId())
             .withTemporaryPassword(generateValidPassword())
-            // Specify "EMAIL" if email will be used to send the welcome message
             .withDesiredDeliveryMediums(DeliveryMediumType.EMAIL)
             .withUsername(userDto.getUsername())
             .withMessageAction(MessageActionType.SUPPRESS)
@@ -105,7 +105,6 @@ public class CognitoUserServiceImpl implements CognitoUserService {
 
     @Override
     public void addUserToGroup(String username, String groupName) {
-
         try {
             AdminAddUserToGroupRequest addUserToGroupRequest = new AdminAddUserToGroupRequest()
                 .withGroupName(groupName)
@@ -119,12 +118,6 @@ public class CognitoUserServiceImpl implements CognitoUserService {
         }
     }
 
-    /**
-     * Sets the specified user's password in a user pool as an administrator. Works on any user.
-     *
-     * @param username username
-     * @param password user password
-     */
     @Override
     public void setUserPassword(String username, String password) {
         try {
@@ -144,39 +137,41 @@ public class CognitoUserServiceImpl implements CognitoUserService {
 
     @Override
     public BaseResponse authenticate(LoginDTO userLogin) {
-
         AdminInitiateAuthResult result =
             initiateAuth(userLogin.getUsername(), userLogin.getPassword())
                 .orElseThrow(
                     () -> new com.amazonaws.services.cognitoidp.model.UserNotFoundException(
                         String.format("Username %s  not found.", userLogin.getUsername())));
-
-        // Password change required on first username
         if (ObjectUtils.nullSafeEquals(NEW_PASSWORD_REQUIRED.name(), result.getChallengeName())) {
-            return new BaseResponse(AuthenticatedChallengeDTO.builder()
-                .challengeType(NEW_PASSWORD_REQUIRED.name())
-                .sessionId(result.getSession())
-                .username(userLogin.getUsername())
-                .build(), "First time login - Password change required", false);
+            return getChangePassword(userLogin, result);
         }
+        return getSuccessfulLogin(userLogin, result);
+    }
 
+    private BaseResponse getChangePassword(LoginDTO userLogin, AdminInitiateAuthResult authResult) {
+        return new BaseResponse(AuthenticatedChallengeDTO.builder()
+            .challengeType(NEW_PASSWORD_REQUIRED.name())
+            .sessionId(authResult.getSession())
+            .username(userLogin.getUsername())
+            .build(), "First time login - Password change required", false);
+    }
+
+    private BaseResponse getSuccessfulLogin(LoginDTO userLogin,
+                                            AdminInitiateAuthResult authResult) {
         return new BaseResponse(AuthenticatedResponse.builder()
-            .accessToken(result.getAuthenticationResult().getAccessToken())
-            .idToken(result.getAuthenticationResult().getIdToken())
-            .refreshToken(result.getAuthenticationResult().getRefreshToken())
+            .accessToken(authResult.getAuthenticationResult().getAccessToken())
+            .idToken(authResult.getAuthenticationResult().getIdToken())
+            .refreshToken(authResult.getAuthenticationResult().getRefreshToken())
             .username(userLogin.getUsername())
             .build(), "Login successful", false);
     }
 
-    @Override
-    public Optional<AdminInitiateAuthResult> initiateAuth(String username, String password) {
+    private Optional<AdminInitiateAuthResult> initiateAuth(String username, String password) {
 
         final Map<String, String> authParams = new HashMap<>();
-        authParams.put(CognitoAttributesEnum.USERNAME.name(), username);
-        authParams.put(CognitoAttributesEnum.PASSWORD.name(), password);
-        authParams.put(CognitoAttributesEnum.SECRET_HASH.name(),
-            calculateSecretHash(awsConstants.getAppClientId(), awsConstants.getAppClientSecret(),
-                username));
+        authParams.put(USER_NAME, username);
+        authParams.put(PASSWORD, password);
+        authParams.put(SECRET_HASH, calculateSecretHash(username));
 
         final AdminInitiateAuthRequest authRequest = new AdminInitiateAuthRequest()
             .withAuthFlow(AuthFlowType.ADMIN_NO_SRP_AUTH)
@@ -188,7 +183,7 @@ public class CognitoUserServiceImpl implements CognitoUserService {
     }
 
     @Override
-    public Optional<AdminRespondToAuthChallengeResult> respondToAuthChallenge(
+    public AdminRespondToAuthChallengeResult respondToAuthChallenge(
         String username, String newPassword, String session) {
         AdminRespondToAuthChallengeRequest request = new AdminRespondToAuthChallengeRequest();
         request.withChallengeName(NEW_PASSWORD_REQUIRED)
@@ -196,15 +191,12 @@ public class CognitoUserServiceImpl implements CognitoUserService {
             .withClientId(awsConstants.getAppClientId())
             .withSession(session)
             .addChallengeResponsesEntry("userAttributes.name", "aek")
-            .addChallengeResponsesEntry(CognitoAttributesEnum.USERNAME.name(), username)
-            .addChallengeResponsesEntry(CognitoAttributesEnum.NEW_PASSWORD.name(), newPassword)
-            .addChallengeResponsesEntry(CognitoAttributesEnum.SECRET_HASH.name(),
-                calculateSecretHash(awsConstants.getAppClientId(),
-                    awsConstants.getAppClientSecret(),
-                    username));
+            .addChallengeResponsesEntry(USER_NAME, username)
+            .addChallengeResponsesEntry(NEW_PASSWORD, newPassword)
+            .addChallengeResponsesEntry(SECRET_HASH, calculateSecretHash(username));
 
         try {
-            return Optional.of(awsCognitoIdentityProvider.adminRespondToAuthChallenge(request));
+            return (awsCognitoIdentityProvider.adminRespondToAuthChallenge(request));
         } catch (NotAuthorizedException e) {
             throw new NotAuthorizedException("User not found." + e.getErrorMessage());
         } catch (UserNotFoundException e) {
@@ -231,8 +223,7 @@ public class CognitoUserServiceImpl implements CognitoUserService {
             ForgotPasswordRequest request = new ForgotPasswordRequest();
             request.withClientId(awsConstants.getAppClientId())
                 .withUsername(username)
-                .withSecretHash(calculateSecretHash(awsConstants.getAppClientId(),
-                    awsConstants.getAppClientSecret(), username));
+                .withSecretHash(calculateSecretHash(username));
             return awsCognitoIdentityProvider.forgotPassword(request);
         } catch (NotAuthorizedException e) {
             throw new FailedAuthenticationException(
@@ -249,32 +240,28 @@ public class CognitoUserServiceImpl implements CognitoUserService {
                 String.format("Authenticate failed: %s", e.getErrorMessage()), e);
         } catch (UserNotFoundException e) {
             String username =
-                request.getAuthParameters().get(CognitoAttributesEnum.USERNAME.name());
+                request.getAuthParameters().get(USER_NAME);
             throw new UserNotFoundException(String.format("Username %s  not found.", username), e);
         }
     }
 
-    private String calculateSecretHash(String userPoolClientId, String userPoolClientSecret,
-                                       String userName) {
+    private String calculateSecretHash(String userName) {
         final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
-
         SecretKeySpec signingKey = new SecretKeySpec(
-            userPoolClientSecret.getBytes(StandardCharsets.UTF_8),
+            awsConstants.getAppClientSecret().getBytes(StandardCharsets.UTF_8),
             HMAC_SHA256_ALGORITHM);
         try {
             Mac mac = Mac.getInstance(HMAC_SHA256_ALGORITHM);
             mac.init(signingKey);
             mac.update(userName.getBytes(StandardCharsets.UTF_8));
-            byte[] rawHmac = mac.doFinal(userPoolClientId.getBytes(StandardCharsets.UTF_8));
+            byte[] rawHmac = mac.doFinal(
+                awsConstants.getAppClientId().getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(rawHmac);
         } catch (Exception e) {
             throw new ServiceException("Error while calculating ");
         }
     }
 
-    /**
-     * @return password generated
-     */
     private String generateValidPassword() {
         PasswordGenerator gen = new PasswordGenerator();
         CharacterData lowerCaseChars = EnglishCharacterData.LowerCase;
@@ -301,22 +288,23 @@ public class CognitoUserServiceImpl implements CognitoUserService {
         CharacterRule splCharRule = new CharacterRule(specialChars);
         splCharRule.setNumberOfCharacters(2);
 
-        return gen.generatePassword(10, splCharRule, lowerCaseRule,
-            upperCaseRule, digitRule);
+        return gen.generatePassword(10, splCharRule, lowerCaseRule, upperCaseRule, digitRule);
     }
 
     @Override
-    public AuthenticatedResponse updateUserPassword(PasswordUpdateDTO userPassword) {
+    public AuthenticatedResponse updateUserPassword(PasswordUpdateDTO passwordUpdateDTO) {
 
         AdminRespondToAuthChallengeResult result =
-            respondToAuthChallenge(userPassword.getUsername(), userPassword.getPassword(),
-                userPassword.getSessionId()).orElseThrow();
+//            I see duplication of this code
+//        And moreover could it be done in some mapper?
+            respondToAuthChallenge(passwordUpdateDTO.getUsername(), passwordUpdateDTO.getPassword(),
+                passwordUpdateDTO.getSessionId());
 
         return AuthenticatedResponse.builder()
             .accessToken(result.getAuthenticationResult().getAccessToken())
             .idToken(result.getAuthenticationResult().getIdToken())
             .refreshToken(result.getAuthenticationResult().getRefreshToken())
-            .username(userPassword.getUsername())
+            .username(passwordUpdateDTO.getUsername())
             .build();
     }
 }

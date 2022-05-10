@@ -43,7 +43,6 @@ public class UserDto {
     private String birthdate;
 
     @NotNull(message = "Incorrect role!")
-    @Pattern(regexp = Constants.ID_REGEX, message = "Incorrect role!")
     private String roleId;
 
     private String phoneNumber;

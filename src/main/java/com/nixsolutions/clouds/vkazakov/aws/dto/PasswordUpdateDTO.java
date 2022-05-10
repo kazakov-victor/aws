@@ -1,19 +1,11 @@
 package com.nixsolutions.clouds.vkazakov.aws.dto;
 
 import javax.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import org.springframework.lang.NonNull;
 
-@AllArgsConstructor()
-@NoArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 @EqualsAndHashCode(callSuper = true)
 public class PasswordUpdateDTO extends AuthenticatedChallengeDTO {
 

@@ -1,8 +1,6 @@
 package com.nixsolutions.clouds.vkazakov.aws.util;
 
 public class Constants {
-    public final static String ID_REGEX = "^[0-9]+$";
-
     public final static String EMAIL_REGEX =
             "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:" +
                     "[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";

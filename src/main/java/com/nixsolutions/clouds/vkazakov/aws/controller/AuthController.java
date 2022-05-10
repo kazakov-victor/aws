@@ -33,7 +33,7 @@ public class AuthController {
     private final CognitoUserService cognitoUserService;
 
     @PostMapping(value = "/sign-up")
-    public ResponseEntity<BaseResponse> signUp(@ModelAttribute @Validated UserDto userDto) {
+    public ResponseEntity<BaseResponse> signUp(@ModelAttribute UserDto userDto) {
         return new ResponseEntity<>(new BaseResponse(cognitoUserService.signUp(userDto),
             "User account created successfully", false), HttpStatus.CREATED);
     }

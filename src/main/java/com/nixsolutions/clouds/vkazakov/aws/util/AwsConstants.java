@@ -22,8 +22,6 @@ public class AwsConstants {
     private String secretKey;
     private String appClientId;
     private String appClientSecret;
-    private String bucketName;
-    private String baseFolder;
     private int connectionTimeout = 2000;
     private int readTimeout = 2000;
 

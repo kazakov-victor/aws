@@ -1,7 +1,6 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -18,14 +17,12 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    private UserDetailsService userDetailsService;
-    @Autowired
-    private JwtAuthTokenFilter jwtAuthTokenFilter;
-
+    private final UserDetailsService userDetailsService;
+    private final JwtAuthTokenFilter jwtAuthTokenFilter;
     private static final String[] AUTH_WHITELIST = {
         "/swagger-resources/**",
         "/v2/api-docs",
@@ -34,12 +31,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         "/auth/sign-in",
         "/"
     };
-
-    @Autowired
-    public WebSecurityConfig(
-        UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
