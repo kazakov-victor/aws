@@ -1,7 +1,5 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
@@ -9,45 +7,72 @@ import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
-import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.context.annotation.Profile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sns.SnsClient;
 
 @Configuration
 @RequiredArgsConstructor
 public class AwsConfig {
     private final AwsConstants awsConstants;
-    private final Environment environment;
 
     @Bean
-    public AmazonS3 createS3() {
+    @Profile("local")
+    public AmazonS3 createLocalS3() {
         return AmazonS3ClientBuilder.standard()
-            .withCredentials(getCredentialsProvider())
+            .withCredentials(new AWSStaticCredentialsProvider
+                (new BasicAWSCredentials(
+                    awsConstants.getAccessKeyId(),
+                    awsConstants.getSecretKey())))
             .withRegion(awsConstants.getRegion()).build();
     }
 
-    private AWSStaticCredentialsProvider getCredentialsProvider() {
-        if (Arrays.stream(environment.getActiveProfiles()).anyMatch(
-            env -> (env.equalsIgnoreCase("local")))) {
-            return new AWSStaticCredentialsProvider
-                (new BasicAWSCredentials(
-                    awsConstants.getAccessKeyId(),
-                    awsConstants.getSecretKey()));
-        }
-        return new AWSStaticCredentialsProvider
-            (new BasicAWSCredentials("", ""));
+    @Bean
+    @Profile("!local")
+    public AmazonS3 createS3() {
+        return AmazonS3ClientBuilder.standard()
+            .withRegion(awsConstants.getRegion()).build();
     }
 
     @Bean
-    public AWSCognitoIdentityProvider createCognitoClient() {
-        AWSCredentials cred =
-            new BasicAWSCredentials(awsConstants.getAccessKeyId(), awsConstants.getSecretKey());
-        AWSCredentialsProvider credProvider = new AWSStaticCredentialsProvider(cred);
+    @Profile("local")
+    public AWSCognitoIdentityProvider createLocalCognitoClient() {
         return AWSCognitoIdentityProviderClientBuilder.standard()
-            .withCredentials(credProvider)
+            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                awsConstants.getAccessKeyId(), awsConstants.getSecretKey())))
             .withRegion(awsConstants.getRegion())
+            .build();
+    }
+
+    @Bean
+    @Profile("!local")
+    public AWSCognitoIdentityProvider createCognitoClient() {
+        return AWSCognitoIdentityProviderClientBuilder.standard()
+            .withRegion(awsConstants.getRegion())
+            .build();
+    }
+
+    @Bean
+    @Profile("local")
+    public SnsClient createLocalSnsClient() {
+        return SnsClient.builder()
+            .credentialsProvider(StaticCredentialsProvider.create(
+                AwsBasicCredentials
+                    .create(awsConstants.getAccessKeyId(), awsConstants.getSecretKey())))
+            .region(Region.of(awsConstants.getRegion()))
+            .build();
+    }
+
+    @Bean
+    @Profile("!local")
+    public SnsClient createSnsClient() {
+        return SnsClient.builder()
+            .region(Region.of(awsConstants.getRegion()))
             .build();
     }
 }

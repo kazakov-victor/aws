@@ -29,7 +29,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         "/swagger-ui/**",
         "/auth/sign-up",
         "/auth/sign-in",
-        "/"
+        "/",
+        "/sns/**"
     };
 
     @Bean

@@ -11,6 +11,7 @@ import com.amazonaws.services.cognitoidp.model.AdminRespondToAuthChallengeResult
 import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.AuthFlowType;
+import com.amazonaws.services.cognitoidp.model.AuthenticationResultType;
 import com.amazonaws.services.cognitoidp.model.DeliveryMediumType;
 import com.amazonaws.services.cognitoidp.model.ForgotPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.ForgotPasswordResult;
@@ -157,13 +158,20 @@ public class CognitoUserServiceImpl implements CognitoUserService {
     }
 
     private BaseResponse getSuccessfulLogin(LoginDTO userLogin,
-                                            AdminInitiateAuthResult authResult) {
-        return new BaseResponse(AuthenticatedResponse.builder()
-            .accessToken(authResult.getAuthenticationResult().getAccessToken())
-            .idToken(authResult.getAuthenticationResult().getIdToken())
-            .refreshToken(authResult.getAuthenticationResult().getRefreshToken())
-            .username(userLogin.getUsername())
-            .build(), "Login successful", false);
+                                            AdminInitiateAuthResult result) {
+        return new BaseResponse(
+            getAuthenticatedResponse(result.getAuthenticationResult(), userLogin.getUsername()),
+            "Login successful", false);
+    }
+
+    private AuthenticatedResponse getAuthenticatedResponse(
+        AuthenticationResultType authenticationResult, String username) {
+        return AuthenticatedResponse.builder()
+            .accessToken(authenticationResult.getAccessToken())
+            .idToken(authenticationResult.getIdToken())
+            .refreshToken(authenticationResult.getRefreshToken())
+            .username(username)
+            .build();
     }
 
     private Optional<AdminInitiateAuthResult> initiateAuth(String username, String password) {
@@ -295,16 +303,10 @@ public class CognitoUserServiceImpl implements CognitoUserService {
     public AuthenticatedResponse updateUserPassword(PasswordUpdateDTO passwordUpdateDTO) {
 
         AdminRespondToAuthChallengeResult result =
-//            I see duplication of this code
-//        And moreover could it be done in some mapper?
             respondToAuthChallenge(passwordUpdateDTO.getUsername(), passwordUpdateDTO.getPassword(),
                 passwordUpdateDTO.getSessionId());
 
-        return AuthenticatedResponse.builder()
-            .accessToken(result.getAuthenticationResult().getAccessToken())
-            .idToken(result.getAuthenticationResult().getIdToken())
-            .refreshToken(result.getAuthenticationResult().getRefreshToken())
-            .username(passwordUpdateDTO.getUsername())
-            .build();
+        return getAuthenticatedResponse(result.getAuthenticationResult(),
+            passwordUpdateDTO.getUsername());
     }
 }

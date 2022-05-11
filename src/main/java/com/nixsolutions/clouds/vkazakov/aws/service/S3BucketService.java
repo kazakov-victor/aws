@@ -4,8 +4,6 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.nixsolutions.clouds.vkazakov.aws.util.S3Constants;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -39,11 +37,6 @@ public class S3BucketService {
         } catch (SdkClientException exception) {
             log.error(exception.getMessage());
         }
-    }
-
-    public S3ObjectInputStream downloadFile(final String fileName) {
-        S3Object object = amazonS3.getObject(s3Constants.getBucketName(), fileName);
-        return object.getObjectContent();
     }
 }
 

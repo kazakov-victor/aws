@@ -5,7 +5,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
 import java.io.IOException;
-import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,9 +14,7 @@ import lombok.extern.log4j.Log4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -39,13 +36,16 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
                 configurableJWTProcessor.process(getBearerToken(idToken), null);
             validateIssuer(claims);
             verifyIfAccessToken(claims);
-            String username = claims.getClaims().get("username").toString();
-            if (username != null) {
-                List<GrantedAuthority> grantedAuthorities =
-                    of(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                return new UsernamePasswordAuthenticationToken(username, claims,
-                    grantedAuthorities);
-            }
+            return getAuthenticationToken(claims);
+        }
+        return null;
+    }
+
+    private UsernamePasswordAuthenticationToken getAuthenticationToken(JWTClaimsSet claims) {
+        String username = claims.getClaims().get("username").toString();
+        if (username != null) {
+            return new UsernamePasswordAuthenticationToken(username, claims,
+                of(new SimpleGrantedAuthority("ROLE_ADMIN")));
         }
         return null;
     }
@@ -78,7 +78,7 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            log.error("Can NOT set user authentication -> Message: {" + e.getMessage() +"}", e);
+            log.error("Can NOT set user authentication -> Message: {" + e.getMessage() + "}", e);
         }
         filterChain.doFilter(request, response);
     }

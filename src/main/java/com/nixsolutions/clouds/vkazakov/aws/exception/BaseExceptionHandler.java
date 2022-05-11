@@ -36,7 +36,7 @@ public class BaseExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler({ConstraintViolationException.class, UsernameExistsException.class, InvalidParameterException.class})
+    @ExceptionHandler({ConstraintViolationException.class, UsernameExistsException.class})
     public BaseResponse processValidationError(ConstraintViolationException ex) {
         return new BaseResponse(null, ex.getMessage());
     }
@@ -45,10 +45,9 @@ public class BaseExceptionHandler {
     @ExceptionHandler({Exception.class, InternalErrorException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse handleAllExceptions(Exception ex) {
-        //log ex.getLocalizedMessage()
-        ex.printStackTrace();
         log.error(ex.getMessage(), ex.getLocalizedMessage());
-        return new BaseResponse(null, (ex.getMessage() != null) ? ex.getMessage() : "Oops something went wrong !!!");
+        return new BaseResponse(null, (ex.getMessage() != null)
+            ? ex.getMessage() : "Oops something went wrong !!!");
 
     }
 }
