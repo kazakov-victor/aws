@@ -3,11 +3,13 @@ package com.nixsolutions.clouds.vkazakov.aws.controller;
 import com.nixsolutions.clouds.vkazakov.aws.entity.Message;
 import com.nixsolutions.clouds.vkazakov.aws.service.SnsService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Role;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/sns")
+
 public class SubController {
     private final SnsService snsService;
 

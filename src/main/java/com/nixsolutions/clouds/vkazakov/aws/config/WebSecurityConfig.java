@@ -1,5 +1,6 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
+import com.amazonaws.services.managedgrafana.model.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +31,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         "/auth/sign-up",
         "/auth/sign-in",
         "/",
-        "/sns/**"
+//        "/sns/**"
     };
 
     @Bean
@@ -70,6 +71,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors()
             .and().csrf().disable()
             .authorizeRequests()
+            .antMatchers("/sns/**").hasRole("ADMIN")
             .antMatchers(AUTH_WHITELIST).permitAll()
             .anyRequest().authenticated()
             .and()
