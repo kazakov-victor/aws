@@ -2,6 +2,7 @@ package com.nixsolutions.clouds.vkazakov.aws.util;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
+@EnableConfigurationProperties
 @ConfigurationProperties(prefix = "aws", ignoreUnknownFields = false)
 public class AwsConstants {
     private String userPoolId;

@@ -1,7 +1,7 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
-import com.amazonaws.services.managedgrafana.model.Role;
 import lombok.AllArgsConstructor;
+import org.springframework.cloud.aws.messaging.config.annotation.EnableSqs;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -21,6 +21,7 @@ import org.springframework.web.filter.CorsFilter;
 @AllArgsConstructor
 @Configuration
 @EnableWebSecurity
+//@EnableSqs
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final JwtAuthTokenFilter jwtAuthTokenFilter;
@@ -31,7 +32,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         "/auth/sign-up",
         "/auth/sign-in",
         "/",
-//        "/sns/**"
+        "/sqs/send"
     };
 
     @Bean
@@ -71,8 +72,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors()
             .and().csrf().disable()
             .authorizeRequests()
-            .antMatchers("/sns/**").hasRole("ADMIN")
             .antMatchers(AUTH_WHITELIST).permitAll()
+//            .antMatchers("/sns/**").hasRole("ADMIN")
             .anyRequest().authenticated()
             .and()
             .sessionManagement()

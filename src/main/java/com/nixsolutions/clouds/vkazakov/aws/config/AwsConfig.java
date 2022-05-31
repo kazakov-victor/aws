@@ -4,8 +4,10 @@ import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -31,10 +33,17 @@ public class AwsConfig {
             .build();
     }
 
+//    @Bean
+//    public SnsClient createSnsClient() {
+//        return SnsClient.builder()
+//            .region(Region.of(awsConstants.getRegion()))
+//            .build();
+//    }
+
     @Bean
-    public SnsClient createSnsClient() {
-        return SnsClient.builder()
-            .region(Region.of(awsConstants.getRegion()))
-            .build();
+    public QueueMessagingTemplate queueMessagingTemplate() {
+        return new QueueMessagingTemplate(AmazonSQSAsyncClientBuilder.standard()
+            .withRegion(awsConstants.getRegion())
+            .build());
     }
 }

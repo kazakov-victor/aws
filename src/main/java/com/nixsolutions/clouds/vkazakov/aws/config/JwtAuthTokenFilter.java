@@ -32,17 +32,16 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
     public Authentication authenticate(HttpServletRequest request) throws Exception {
         String idToken = request.getHeader("Authorization");
         if (idToken != null) {
-            JWTClaimsSet claims =
-                configurableJWTProcessor.process(getBearerToken(idToken), null);
+            JWTClaimsSet claims = configurableJWTProcessor.process(getBearerToken(idToken), null);
             validateIssuer(claims);
-            verifyIfAccessToken(claims);
+            verifyIfIdToken(claims);
             return getAuthenticationToken(claims);
         }
         return null;
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(JWTClaimsSet claims) {
-        String username = claims.getClaims().get("username").toString();
+        String username = claims.getClaims().get("cognito:username").toString();
         if (username != null) {
             return new UsernamePasswordAuthenticationToken(username, claims,
                 of(new SimpleGrantedAuthority("ROLE_ADMIN")));
@@ -61,9 +60,9 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
         }
     }
 
-    private void verifyIfAccessToken(JWTClaimsSet claims) throws Exception {
-        if (!claims.getClaim("token_use").equals("access")) {
-            throw new Exception("JWT Token is not an Access Token");
+    private void verifyIfIdToken(JWTClaimsSet claims) throws Exception {
+        if (!claims.getClaim("token_use").equals("id")) {
+            throw new Exception("JWT Token is not an Id Token");
         }
     }
 
