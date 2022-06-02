@@ -4,12 +4,13 @@ import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClientBuilder;
 import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -33,17 +34,18 @@ public class AwsConfig {
             .build();
     }
 
-//    @Bean
-//    public SnsClient createSnsClient() {
-//        return SnsClient.builder()
-//            .region(Region.of(awsConstants.getRegion()))
-//            .build();
-//    }
+    @Bean
+    public SnsClient createSnsClient() {
+        return SnsClient.builder()
+            .region(Region.of(awsConstants.getRegion()))
+            .build();
+    }
 
     @Bean
-    public QueueMessagingTemplate queueMessagingTemplate() {
-        return new QueueMessagingTemplate(AmazonSQSAsyncClientBuilder.standard()
+    @Primary
+    public AmazonSQS createSqsClient(){
+        return AmazonSQSAsyncClientBuilder.standard()
             .withRegion(awsConstants.getRegion())
-            .build());
+            .build();
     }
 }

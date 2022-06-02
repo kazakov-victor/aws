@@ -21,7 +21,7 @@ import org.springframework.web.filter.CorsFilter;
 @AllArgsConstructor
 @Configuration
 @EnableWebSecurity
-//@EnableSqs
+@EnableSqs
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final JwtAuthTokenFilter jwtAuthTokenFilter;
@@ -31,8 +31,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         "/swagger-ui/**",
         "/auth/sign-up",
         "/auth/sign-in",
-        "/",
-        "/sqs/send"
+        "/"
     };
 
     @Bean
