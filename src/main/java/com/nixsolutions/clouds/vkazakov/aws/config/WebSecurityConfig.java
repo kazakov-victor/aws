@@ -72,7 +72,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .and().csrf().disable()
             .authorizeRequests()
             .antMatchers(AUTH_WHITELIST).permitAll()
-//            .antMatchers("/sns/**").hasRole("ADMIN")
             .anyRequest().authenticated()
             .and()
             .sessionManagement()

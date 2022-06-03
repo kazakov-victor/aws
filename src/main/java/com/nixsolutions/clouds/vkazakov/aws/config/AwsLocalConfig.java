@@ -22,7 +22,6 @@ import software.amazon.awssdk.services.sns.SnsClient;
 @Configuration
 @RequiredArgsConstructor
 @Profile("local")
-
 public class AwsLocalConfig {
     private final AwsConstants awsConstants;
 

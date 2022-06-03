@@ -17,6 +17,5 @@ public class SqsController {
     @GetMapping("/list")
     List<MessageSqs> getAllMessage() {
         return messageSqsService.getAllMessages();
-
     }
 }
