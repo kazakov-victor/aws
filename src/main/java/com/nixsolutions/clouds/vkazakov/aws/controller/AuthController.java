@@ -31,11 +31,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
     private final CognitoUserService cognitoUserService;
+    private final static String SIGN_UP_MESSAGE = "User account created successfully";
+    private final static String CHANGE_PASSWORD_MESSAGE = "Update successfully";
+    private final static String FORGET_PASSWORD_MESSAGE = "You should soon receive an email" +
+        " which will allow you to reset your password.\n" +
+        "Check your spam and trash if you can't find the email.";
 
     @PostMapping(value = "/sign-up")
     public ResponseEntity<BaseResponse> signUp(@ModelAttribute UserDto userDto) {
         return new ResponseEntity<>(new BaseResponse(cognitoUserService.signUp(userDto),
-            "User account created successfully", false), HttpStatus.CREATED);
+            SIGN_UP_MESSAGE, false), HttpStatus.CREATED);
     }
 
     @PostMapping("/sign-in")
@@ -50,7 +55,7 @@ public class AuthController {
             cognitoUserService.updateUserPassword(passwordUpdateDTO);
 
         return new ResponseEntity<>(
-            new BaseResponse(authenticatedResponse, "Update successfully", false), HttpStatus.OK);
+            new BaseResponse(authenticatedResponse, CHANGE_PASSWORD_MESSAGE, false), HttpStatus.OK);
     }
 
     @DeleteMapping("/logout")
@@ -62,11 +67,8 @@ public class AuthController {
     public ResponseEntity<BaseResponse> forgotPassword(
         @NotNull @NotEmpty @Email @RequestParam("email") String email) {
         ForgotPasswordResult result = cognitoUserService.forgotPassword(email);
-        return new ResponseEntity<>(new BaseResponse(
-            result.getCodeDeliveryDetails().getDestination(),
-            "You should soon receive an email which will allow you to reset your password." +
-                " Check your spam and trash if you can't find the email.",
-            false), HttpStatus.OK);
+        return new ResponseEntity<>(new BaseResponse(result.getCodeDeliveryDetails()
+            .getDestination(),FORGET_PASSWORD_MESSAGE,false), HttpStatus.OK);
     }
 
 }

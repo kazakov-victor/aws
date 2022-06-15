@@ -7,4 +7,13 @@ public class Constants {
 
     public final static String DATE_REGEX =
             "^\\d{4}\\-(0[1-9]|1[012])\\-(0[1-9]|[12][0-9]|3[01])$";
+
+    public static final String[] NO_PASSWORD_PATHS = {
+        "/swagger-resources/**",
+        "/v2/api-docs",
+        "/swagger-ui/**",
+        "/auth/sign-up",
+        "/auth/sign-in",
+        "/"
+    };
 }

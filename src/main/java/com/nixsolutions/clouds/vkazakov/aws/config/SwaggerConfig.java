@@ -22,7 +22,8 @@ public class SwaggerConfig {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
     public static final String TITLE = "Users REST API";
-    public static final String DESCRIPTION = "Back-end REST API.";
+    public static final String DESCRIPTION_API = "Back-end REST API.";
+
     public static final String VERSION = "1.0";
     public static final String TERMS_OF_SERVICE_URL = "Terms of service";
     public static final String NAME = "Victor Kazakov";
@@ -30,9 +31,12 @@ public class SwaggerConfig {
     public static final String EMAIL = "viktor.kazakov@nixsolutions.com";
     public static final String LICENSE = "License of API";
     public static final String LICENSE_URL = "API license URL";
+    public static final String SCOPE = "global";
+    public static final String DESCRIPTION_AUTHORISATION = "accessEverything";
+    public static final String BASE_PACKAGE = "com.nixsolutions.clouds.vkazakov.aws";
 
     private ApiInfo apiInfo() {
-        return new ApiInfo(TITLE, DESCRIPTION, VERSION, TERMS_OF_SERVICE_URL,
+        return new ApiInfo(TITLE, DESCRIPTION_API, VERSION, TERMS_OF_SERVICE_URL,
             new Contact(NAME, URL, EMAIL), LICENSE, LICENSE_URL, Collections.emptyList());
     }
 
@@ -41,7 +45,7 @@ public class SwaggerConfig {
         return new Docket(DocumentationType.SWAGGER_2)
             .apiInfo(apiInfo())
             .select()
-            .apis(RequestHandlerSelectors.basePackage("com.nixsolutions.clouds.vkazakov.aws"))
+            .apis(RequestHandlerSelectors.basePackage(BASE_PACKAGE))
             .paths(PathSelectors.any())
             .build()
             .securityContexts(Collections.singletonList(securityContext()))
@@ -60,7 +64,7 @@ public class SwaggerConfig {
 
     private List<SecurityReference> defaultAuth() {
         AuthorizationScope authorizationScope
-            = new AuthorizationScope("global", "accessEverything");
+            = new AuthorizationScope(SCOPE, DESCRIPTION_AUTHORISATION);
         AuthorizationScope[] authorizationScopes = new AuthorizationScope[1];
         authorizationScopes[0] = authorizationScope;
         return Collections

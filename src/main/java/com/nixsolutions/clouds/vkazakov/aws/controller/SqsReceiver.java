@@ -12,10 +12,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Log4j
 public class SqsReceiver {
-
+    private final static String QUEUE_NAME= "MyStandartQueue";
     private final MessageSqsService messageSqsService;
 
-    @SqsListener(value = {"MyStandartQueue"}, deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    @SqsListener(value = {QUEUE_NAME}, deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
     public void receiveMessage(String text) {
         messageSqsService.save(new MessageSqs(text));
     }

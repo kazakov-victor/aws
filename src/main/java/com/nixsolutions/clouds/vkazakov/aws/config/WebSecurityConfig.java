@@ -1,5 +1,6 @@
 package com.nixsolutions.clouds.vkazakov.aws.config;
 
+import com.nixsolutions.clouds.vkazakov.aws.util.Constants;
 import lombok.AllArgsConstructor;
 import org.springframework.cloud.aws.messaging.config.annotation.EnableSqs;
 import org.springframework.context.annotation.Bean;
@@ -25,14 +26,6 @@ import org.springframework.web.filter.CorsFilter;
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService;
     private final JwtAuthTokenFilter jwtAuthTokenFilter;
-    private static final String[] AUTH_WHITELIST = {
-        "/swagger-resources/**",
-        "/v2/api-docs",
-        "/swagger-ui/**",
-        "/auth/sign-up",
-        "/auth/sign-in",
-        "/"
-    };
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -71,7 +64,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors()
             .and().csrf().disable()
             .authorizeRequests()
-            .antMatchers(AUTH_WHITELIST).permitAll()
+            .antMatchers(Constants.NO_PASSWORD_PATHS).permitAll()
             .anyRequest().authenticated()
             .and()
             .sessionManagement()
