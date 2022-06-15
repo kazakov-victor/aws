@@ -2,12 +2,9 @@ package com.nixsolutions.clouds.vkazakov.aws.validate;
 
 import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
 import org.owasp.encoder.Encode;
-import org.springframework.stereotype.Component;
 
-@Component
 public class XSSCleaner {
-
-    public UserDto cleanFields(UserDto userDto){
+    public static UserDto cleanFields(UserDto userDto){
         return new UserDto(
            cleanValue(userDto.getFirstName()),
            cleanValue(userDto.getLastName()),
@@ -21,7 +18,7 @@ public class XSSCleaner {
         );
     }
 
-    public String cleanValue(String value) {
+    public static String cleanValue(String value) {
         String result = "";
         if (value != null) {
             result = Encode.forHtmlAttribute(value);

@@ -55,16 +55,7 @@ public class AuthController {
 
     @DeleteMapping("/logout")
     public ResponseEntity<BaseResponse> logout(@RequestHeader("Authorization") String bearerToken) {
-        if (bearerToken != null && bearerToken.contains("Bearer ")) {
-            String accessToken = bearerToken.replace("Bearer ", "");
-
-            cognitoUserService.signOut(accessToken);
-
-            return new ResponseEntity<>(new BaseResponse(null, "Logout successfully", false),
-                HttpStatus.OK);
-        }
-        return new ResponseEntity<>(new BaseResponse(null, "Header not correct"),
-            HttpStatus.BAD_REQUEST);
+        return cognitoUserService.getLogoutResponse(bearerToken);
     }
 
     @GetMapping(value = "/forget-password")

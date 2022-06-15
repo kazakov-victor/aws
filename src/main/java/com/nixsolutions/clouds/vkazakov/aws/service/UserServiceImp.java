@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImp implements UserService {
     private final UserRepository repository;
     private final UserMapper userMapper;
-    private final XSSCleaner xssCleaner;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final S3BucketService s3BucketService;
 
@@ -63,7 +62,7 @@ public class UserServiceImp implements UserService {
     }
 
     public ResponseEntity<UserDto> getFindUserResponse(String username) {
-        String usernameClean = xssCleaner.cleanValue(username);
+        String usernameClean = XSSCleaner.cleanValue(username);
         User user = findUserByUsername(usernameClean);
         if (user != null) {
             return ResponseEntity.ok(userMapper.toDto(user));
@@ -89,7 +88,7 @@ public class UserServiceImp implements UserService {
     }
 
     private UserDto checkUserDto(UserDto userDto) {
-        userDto = xssCleaner.cleanFields(userDto);
+        userDto = XSSCleaner.cleanFields(userDto);
         UserValidator.validate(userDto);
         return userDto;
     }

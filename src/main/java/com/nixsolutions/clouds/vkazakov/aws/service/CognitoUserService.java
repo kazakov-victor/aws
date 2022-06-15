@@ -8,6 +8,7 @@ import com.nixsolutions.clouds.vkazakov.aws.dto.PasswordUpdateDTO;
 import com.nixsolutions.clouds.vkazakov.aws.dto.UserDto;
 import com.nixsolutions.clouds.vkazakov.aws.dto.response.AuthenticatedResponse;
 import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
+import org.springframework.http.ResponseEntity;
 
 public interface CognitoUserService {
     /**
@@ -68,4 +69,6 @@ public interface CognitoUserService {
      * @return AuthenticatedResponse
      */
     AuthenticatedResponse updateUserPassword(PasswordUpdateDTO passwordUpdateDTO);
+
+    ResponseEntity<BaseResponse> getLogoutResponse(String bearerToken);
 }

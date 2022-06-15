@@ -25,16 +25,31 @@ public class JwtConfig {
     @Bean
     public ConfigurableJWTProcessor<SecurityContext> configurableJWTProcessor()
         throws MalformedURLException {
-        ResourceRetriever resourceRetriever =
-            new DefaultResourceRetriever(awsConstants.getConnectionTimeout(),
-                awsConstants.getReadTimeout());
+        ResourceRetriever resourceRetriever = getResourceRetriever();
         ConfigurableJWTProcessor<SecurityContext> configurableJWTProcessor =
-            new DefaultJWTProcessor<>();
-        JWKSource<SecurityContext> jwkSource =
-            new RemoteJWKSet<>(new URL(awsConstants.getJwkUrl()), resourceRetriever);
-        JWSKeySelector<SecurityContext> keySelector =
-            new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, jwkSource);
+            getConfigurableJWTProcessor();
+        JWKSource<SecurityContext> jwkSource = getJwkSource(resourceRetriever);
+        JWSKeySelector<SecurityContext> keySelector = getKeySelector(jwkSource);
         configurableJWTProcessor.setJWSKeySelector(keySelector);
         return configurableJWTProcessor;
+    }
+
+    private DefaultJWTProcessor<SecurityContext> getConfigurableJWTProcessor() {
+        return new DefaultJWTProcessor<>();
+    }
+
+    private RemoteJWKSet<SecurityContext> getJwkSource(ResourceRetriever resourceRetriever)
+        throws MalformedURLException {
+        return new RemoteJWKSet<>(new URL(awsConstants.getJwkUrl()), resourceRetriever);
+    }
+
+    private DefaultResourceRetriever getResourceRetriever() {
+        return new DefaultResourceRetriever(awsConstants.getConnectionTimeout(),
+            awsConstants.getReadTimeout());
+    }
+
+    private JWSVerificationKeySelector<SecurityContext> getKeySelector(
+        JWKSource<SecurityContext> jwkSource) {
+        return new JWSVerificationKeySelector<>(JWSAlgorithm.RS256, jwkSource);
     }
 }

@@ -2,15 +2,13 @@ package com.nixsolutions.clouds.vkazakov.aws.mapper;
 
 import com.nixsolutions.clouds.vkazakov.aws.entity.Role;
 import com.nixsolutions.clouds.vkazakov.aws.service.RoleService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class RoleNameMapper {
     private final RoleService roleService;
-
-    public RoleNameMapper(RoleService roleService) {
-        this.roleService = roleService;
-    }
 
     public String map(Role role) {
         if (role == null) {
@@ -25,5 +23,4 @@ public class RoleNameMapper {
         }
         return roleService.findByName(roleName);
     }
-
 }

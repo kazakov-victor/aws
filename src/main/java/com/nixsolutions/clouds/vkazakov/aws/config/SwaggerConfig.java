@@ -21,17 +21,19 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 public class SwaggerConfig {
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
+    public static final String TITLE = "Users REST API";
+    public static final String DESCRIPTION = "Back-end REST API.";
+    public static final String VERSION = "1.0";
+    public static final String TERMS_OF_SERVICE_URL = "Terms of service";
+    public static final String NAME = "Victor Kazakov";
+    public static final String URL = "www.nixsolutions.com";
+    public static final String EMAIL = "viktor.kazakov@nixsolutions.com";
+    public static final String LICENSE = "License of API";
+    public static final String LICENSE_URL = "API license URL";
 
     private ApiInfo apiInfo() {
-        return new ApiInfo("Users REST API",
-            "Back-end REST API.",
-            "1.0",
-            "Terms of service",
-            new Contact("Victor Kazakov", "www.nixsolutions.com",
-                "viktor.kazakov@nixsolutions.com"),
-            "License of API",
-            "API license URL",
-            Collections.emptyList());
+        return new ApiInfo(TITLE, DESCRIPTION, VERSION, TERMS_OF_SERVICE_URL,
+            new Contact(NAME, URL, EMAIL), LICENSE, LICENSE_URL, Collections.emptyList());
     }
 
     @Bean

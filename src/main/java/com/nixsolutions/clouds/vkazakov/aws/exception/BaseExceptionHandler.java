@@ -2,6 +2,7 @@ package com.nixsolutions.clouds.vkazakov.aws.exception;
 
 import com.amazonaws.services.cognitoidp.model.InternalErrorException;
 import com.amazonaws.services.cognitoidp.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class BaseExceptionHandler {
 
-    @ExceptionHandler({FailedAuthenticationException.class, NotAuthorizedException.class, com.nixsolutions.clouds.vkazakov.aws.exception.UserNotFoundException.class, InvalidPasswordException.class})
+    @ExceptionHandler({FailedAuthenticationException.class, NotAuthorizedException.class,
+        UserNotFoundException.class, InvalidPasswordException.class})
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public BaseResponse unauthorizedExceptions(Exception ex) {
         log.error(ex.getMessage(), ex.getLocalizedMessage());

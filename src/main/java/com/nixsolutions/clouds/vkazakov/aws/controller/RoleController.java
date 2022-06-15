@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin
 @RequiredArgsConstructor
-@RestController
+@RestController("/role")
 public class RoleController {
     private final RoleService roleService;
     private final RoleMapper roleMapper;
@@ -20,7 +20,7 @@ public class RoleController {
      * Returns list of all roles
      */
     @CrossOrigin
-    @GetMapping("/role")
+    @GetMapping("/")
     public @ResponseBody
     List<RoleDto> listRoles() {
         List<Role> roles = roleService.getAllRoles();
@@ -31,7 +31,7 @@ public class RoleController {
      * Finds role by id
      */
     @CrossOrigin
-    @GetMapping("/role/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<RoleDto> findRoleById(@PathVariable Long id) {
         return roleService.getUserByIdResponse(id);
     }

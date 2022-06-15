@@ -18,6 +18,7 @@ import com.amazonaws.services.cognitoidp.model.ForgotPasswordResult;
 import com.amazonaws.services.cognitoidp.model.GlobalSignOutRequest;
 import com.amazonaws.services.cognitoidp.model.MessageActionType;
 import com.amazonaws.services.cognitoidp.model.NotAuthorizedException;
+import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.nixsolutions.clouds.vkazakov.aws.dto.AuthenticatedChallengeDTO;
 import com.nixsolutions.clouds.vkazakov.aws.dto.LoginDTO;
@@ -28,7 +29,6 @@ import com.nixsolutions.clouds.vkazakov.aws.dto.response.BaseResponse;
 import com.nixsolutions.clouds.vkazakov.aws.exception.FailedAuthenticationException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.InvalidPasswordException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.ServiceException;
-import com.nixsolutions.clouds.vkazakov.aws.exception.UserNotFoundException;
 import com.nixsolutions.clouds.vkazakov.aws.exception.UsernameExistsException;
 import com.nixsolutions.clouds.vkazakov.aws.util.AwsConstants;
 import java.nio.charset.StandardCharsets;
@@ -44,6 +44,8 @@ import org.passay.CharacterData;
 import org.passay.CharacterRule;
 import org.passay.EnglishCharacterData;
 import org.passay.PasswordGenerator;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -206,12 +208,25 @@ public class CognitoUserServiceImpl implements CognitoUserService {
         try {
             return (awsCognitoIdentityProvider.adminRespondToAuthChallenge(request));
         } catch (NotAuthorizedException e) {
-            throw new NotAuthorizedException("User not found." + e.getErrorMessage());
+            throw new NotAuthorizedException("User not authorized." + e.getErrorMessage());
         } catch (UserNotFoundException e) {
-            throw new UserNotFoundException("User not found.", e);
+            throw new UserNotFoundException("User not found.");
         } catch (InvalidPasswordException e) {
             throw new InvalidPasswordException("Invalid password.", e);
         }
+    }
+
+    public ResponseEntity<BaseResponse> getLogoutResponse(String bearerToken) {
+        if (bearerToken != null && bearerToken.contains("Bearer ")) {
+            String accessToken = bearerToken.replace("Bearer ", "");
+
+            signOut(accessToken);
+
+            return new ResponseEntity<>(new BaseResponse(null, "Logout successfully", false),
+                HttpStatus.OK);
+        }
+        return new ResponseEntity<>(new BaseResponse(null, "Header not correct"),
+            HttpStatus.BAD_REQUEST);
     }
 
     @Override
@@ -247,9 +262,8 @@ public class CognitoUserServiceImpl implements CognitoUserService {
             throw new FailedAuthenticationException(
                 String.format("Authenticate failed: %s", e.getErrorMessage()), e);
         } catch (UserNotFoundException e) {
-            String username =
-                request.getAuthParameters().get(USER_NAME);
-            throw new UserNotFoundException(String.format("Username %s  not found.", username), e);
+            throw new UserNotFoundException(String.format("Username %s not found.",
+                request.getAuthParameters().get(USER_NAME)));
         }
     }
 

@@ -13,12 +13,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class DbInit implements InitializingBean {
     private final RoleService roleService;
+    private final static String ROLE_ADMIN = "ROLE_ADMIN";
+    private final static String ROLE_USER = "ROLE_USER";
 
     @Override
     public void afterPropertiesSet() {
         if (roleService.getAllRoles().size() == 0) {
-            Role roleAdmin = new Role("ROLE_ADMIN");
-            Role roleUser = new Role("ROLE_USER");
+            Role roleAdmin = new Role(ROLE_ADMIN);
+            Role roleUser = new Role(ROLE_USER);
             roleService.save(roleAdmin);
             roleService.save(roleUser);
         }
