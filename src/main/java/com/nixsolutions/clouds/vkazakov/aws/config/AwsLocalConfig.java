@@ -29,7 +29,7 @@ public class AwsLocalConfig {
     public AmazonS3 createS3() {
         return AmazonS3ClientBuilder
             .standard()
-            .withCredentials(getAwsStaticCredentialsProvider())
+            .withCredentials(getCredentials())
             .withRegion(awsConstants.getRegion())
             .build();
     }
@@ -38,7 +38,7 @@ public class AwsLocalConfig {
     public AWSCognitoIdentityProvider createCognitoClient() {
         return AWSCognitoIdentityProviderClientBuilder
             .standard()
-            .withCredentials(getAwsStaticCredentialsProvider())
+            .withCredentials(getCredentials())
             .withRegion(awsConstants.getRegion())
             .build();
     }
@@ -48,13 +48,13 @@ public class AwsLocalConfig {
     public AmazonSQS createSqsClient(){
         return AmazonSQSAsyncClientBuilder
             .standard()
-            .withCredentials(getAwsStaticCredentialsProvider())
+            .withCredentials(getCredentials())
             .withRegion(awsConstants.getRegion())
             .build();
     }
 
     @Bean
-    public AWSStaticCredentialsProvider getAwsStaticCredentialsProvider() {
+    public AWSStaticCredentialsProvider getCredentials() {
         return new AWSStaticCredentialsProvider(new BasicAWSCredentials(
             awsConstants.getAccessKeyId(), awsConstants.getSecretKey()));
     }
@@ -67,9 +67,4 @@ public class AwsLocalConfig {
             .region(Region.of(awsConstants.getRegion()))
             .build();
     }
-
-
-
-
-
 }
