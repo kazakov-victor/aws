@@ -27,40 +27,49 @@ public class AwsLocalConfig {
 
     @Bean
     public AmazonS3 createS3() {
-        return AmazonS3ClientBuilder.standard()
-            .withCredentials(new AWSStaticCredentialsProvider
-                (new BasicAWSCredentials(
-                    awsConstants.getAccessKeyId(),
-                    awsConstants.getSecretKey())))
-            .withRegion(awsConstants.getRegion()).build();
-    }
-
-    @Bean
-    public AWSCognitoIdentityProvider createCognitoClient() {
-        return AWSCognitoIdentityProviderClientBuilder.standard()
-            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
-                awsConstants.getAccessKeyId(), awsConstants.getSecretKey())))
+        return AmazonS3ClientBuilder
+            .standard()
+            .withCredentials(getAwsStaticCredentialsProvider())
             .withRegion(awsConstants.getRegion())
             .build();
     }
 
     @Bean
-    public SnsClient createSnsClient() {
-        return SnsClient.builder()
-            .credentialsProvider(StaticCredentialsProvider.create(
-                AwsBasicCredentials
-                    .create(awsConstants.getAccessKeyId(), awsConstants.getSecretKey())))
-            .region(Region.of(awsConstants.getRegion()))
+    public AWSCognitoIdentityProvider createCognitoClient() {
+        return AWSCognitoIdentityProviderClientBuilder
+            .standard()
+            .withCredentials(getAwsStaticCredentialsProvider())
+            .withRegion(awsConstants.getRegion())
             .build();
     }
 
     @Bean
     @Primary
     public AmazonSQS createSqsClient(){
-      return AmazonSQSAsyncClientBuilder.standard()
-          .withRegion(awsConstants.getRegion())
-          .withCredentials(new AWSStaticCredentialsProvider(
-              new BasicAWSCredentials(awsConstants.getAccessKeyId(), awsConstants.getSecretKey())))
-          .build();
+        return AmazonSQSAsyncClientBuilder
+            .standard()
+            .withCredentials(getAwsStaticCredentialsProvider())
+            .withRegion(awsConstants.getRegion())
+            .build();
     }
+
+    @Bean
+    public AWSStaticCredentialsProvider getAwsStaticCredentialsProvider() {
+        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+            awsConstants.getAccessKeyId(), awsConstants.getSecretKey()));
+    }
+
+    @Bean
+    public SnsClient createSnsClient() {
+        return SnsClient.builder()
+            .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials
+                    .create(awsConstants.getAccessKeyId(), awsConstants.getSecretKey())))
+            .region(Region.of(awsConstants.getRegion()))
+            .build();
+    }
+
+
+
+
+
 }
